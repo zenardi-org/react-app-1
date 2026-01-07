@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: react-app-1
+  labels:
+    environment: poc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-app-1
+  namespace: react-app-1
+  labels:
+    app: react-app-1
+    environment: poc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: react-app-1
+  template:
+    metadata:
+      labels:
+        app: react-app-1
+        environment: poc
+    spec:
+      containers:
+        - name: react-app-1
+          image: docker.io/zenardi/react-app-1:latest
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-app-1-service
+  namespace: react-app-1
+  labels:
+    environment: poc
+spec:
+  selector:
+    app: react-app-1
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: react-app-1-hpa
+  namespace: react-app-1
+  labels:
+    environment: poc
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: react-app-1
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: react-app-1-ingress
+  namespace: react-app-1
+  labels:
+    environment: poc
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: react-app-1.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: react-app-1-service
+                port:
+                  number: 80

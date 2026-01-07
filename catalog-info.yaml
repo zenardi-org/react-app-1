@@ -1,0 +1,20 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: react-app-1
+  description: 'My Cool App'
+  annotations:
+    github.com/project-slug: zenardi-org/react-app-1
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: http://react-app-1.local
+      title: react-app-1 Link
+      icon: dashboard
+      type: admin-dashboard
+  tags:
+    - react
+    - typescript
+spec:
+  type: website
+  owner: group:default/development
+  lifecycle: experimental
