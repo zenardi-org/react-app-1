@@ -6,6 +6,7 @@ metadata:
   annotations:
     github.com/project-slug: zenardi-org/react-app-1
     backstage.io/techdocs-ref: dir:.
+    grafana/dashboard-selector: "a164a7f0339f99e89cea5cb47e9be617"
   links:
     - url: http://react-app-1.local
       title: react-app-1 Link
@@ -17,4 +18,5 @@ metadata:
 spec:
   type: website
   owner: group:default/development
+
   lifecycle: experimental
