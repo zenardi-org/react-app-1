@@ -7,7 +7,7 @@ metadata:
     github.com/project-slug: zenardi-org/react-app-1
     backstage.io/techdocs-ref: dir:.
     grafana/dashboard-selector: "title == 'K8S Pod Metrics'"
-    grafana/overview-dashboard: "http://grafana.local/d/r1m-inuIk/k8s-pod-metrics?orgId=1"
+    grafana/overview-dashboard: "https://grafana.local/d/r1m-inuIk/k8s-pod-metrics?orgId=1"
   links:
     - url: http://react-app-1.local
       title: react-app-1 Link
@@ -21,6 +21,7 @@ spec:
   owner: group:default/development
 
   lifecycle: experimental
+
 
 
 
