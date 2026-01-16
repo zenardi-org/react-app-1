@@ -1,0 +1,94 @@
+name: react-app-1-cicd
+
+on:
+  push:
+    paths:
+      - src/**
+    branches:
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/react-app-1:latest
+
+  cd:
+    needs: ci
+    runs-on: self-hosted
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - name: Install kubectl
+        shell: bash
+        run: |
+          curl -sSL -o /tmp/kubectl https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl
+          chmod +x /tmp/kubectl
+          sudo mv /tmp/kubectl /usr/local/bin/kubectl
+
+      - name: Install argocd
+        shell: bash
+        run: |
+          curl -sSL -o /tmp/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x /tmp/argocd
+          sudo mv /tmp/argocd /usr/local/bin/argocd
+
+      - name: argocd login
+        shell: bash
+        run: |
+          argocd login argocd-server.argocd \
+            --plaintext \
+            --grpc-web \
+            --username admin \
+            --password  ${{ secrets.ARGOCD_PASSWORD }}
+
+      - name: Ensure ArgoCD Project
+        shell: bash
+        run: |
+          kubectl apply -f argocd/project.yaml
+
+      - name: Ensure ArgoCD Application
+        shell: bash
+        run: |
+          kubectl apply -f argocd/application.yaml
+
+      - name: Ensure Namespace Exists
+        shell: bash
+        run: |
+          NAMESPACE="rocketman"
+          echo "Creating namespace: $NAMESPACE"
+          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+          # Wait for namespace to be ready (max 30 seconds)
+          for i in {1..30}; do
+            if kubectl get namespace "$NAMESPACE" &>/dev/null; then
+              echo "✓ Namespace $NAMESPACE is ready"
+              exit 0
+            fi
+            echo "Waiting for namespace to be created... ($i/30)"
+            sleep 1
+          done
+
+          echo "✗ Namespace creation timeout after 30 seconds"
+          exit 1     
+
+      - name: Deploy to Local Cluster
+        run: |
+          echo "🚀 Applying manifests from k8s/ folder..."
+          kubectl apply -f k8s/
+          
+          echo "⏳ Waiting for rollout..."
+          kubectl rollout status deployment/react-app-1 -n rocketman --timeout=90s
+

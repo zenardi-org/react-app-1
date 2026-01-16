@@ -1,0 +1,35 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: react-app-1
+  description: 'REACT!'
+  annotations:
+    github.com/project-slug: zenardi-org/react-app-1
+    backstage.io/techdocs-ref: dir:.
+    grafana/dashboard-selector: "title == 'react-app-1'"
+    grafana/alert-label-selector: "app=react-app-1"
+    
+    # Kubernetes cluster linkage
+    backstage.io/kubernetes-id: react-app-1
+    deployment-target-cluster: kind-backstage
+    backstage.io/kubernetes-namespace: rocketman
+
+  links:
+    - url: http://react-app-1.local
+      title: react-app-1 Link
+      icon: dashboard
+      type: admin-dashboard
+    - url: https://argocd.local/applications/argocd/react-app-1?view=tree&resource=
+      title: ArgoCD
+      icon: dashboard
+      type: admin-dashboard
+  tags:
+    - react
+    - typescript
+spec:
+  type: website
+  owner: group:default/development
+  lifecycle: experimental
+  system: system:default/rocketman
+  dependsOn:
+    - resource:default/kind-backstage
